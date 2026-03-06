@@ -66,6 +66,20 @@ export default function UploadPage() {
     setUploadProgress(0);
 
     try {
+      // Client-side validation mirrors backend requirements
+      if (!formData.title.trim()) {
+        setError('Title is required');
+        setIsLoading(false);
+        return;
+      }
+
+      // Description is required by the backend
+      if (!formData.description.trim()) {
+        setError('Description is required');
+        setIsLoading(false);
+        return;
+      }
+
       if (!videoFile) {
         setError('Please select a video file');
         setIsLoading(false);
@@ -79,8 +93,9 @@ export default function UploadPage() {
       }
 
       const data = new FormData();
-      data.append('title', formData.title);
-      data.append('description', formData.description);
+      data.append('title', formData.title.trim());
+      data.append('description', formData.description.trim());
+      // Field names match backend: req.files?.videoFile and req.files?.thumbnail
       data.append('videoFile', videoFile);
       data.append('thumbnail', thumbnailFile);
 
@@ -94,7 +109,9 @@ export default function UploadPage() {
         },
       });
 
-      router.push(`/watch/${response.data.data._id}`);
+      // Backend returns: new ApiResponse(201, videoUploaded, "video uploaded successfully")
+      // So response.data = { statusCode, data: videoUploaded, message }
+      router.push(`/watch/${response.data.data.id}`);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
@@ -124,7 +141,9 @@ export default function UploadPage() {
 
             {/* Title */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Video Title</label>
+              <label className="text-sm font-medium text-foreground">
+                Video Title <span className="text-destructive">*</span>
+              </label>
               <Input
                 type="text"
                 name="title"
@@ -137,23 +156,28 @@ export default function UploadPage() {
               />
             </div>
 
-            {/* Description */}
+            {/* Description — required by backend */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Description</label>
+              <label className="text-sm font-medium text-foreground">
+                Description <span className="text-destructive">*</span>
+              </label>
               <textarea
                 name="description"
-                placeholder="Describe your video (optional)"
+                placeholder="Describe your video"
                 value={formData.description}
                 onChange={handleInputChange}
+                required
                 disabled={isLoading}
                 rows={4}
-                className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-2 bg-secondary border border-border rounded-md text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {/* Video File */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Video File</label>
+              <label className="text-sm font-medium text-foreground">
+                Video File <span className="text-destructive">*</span>
+              </label>
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
                 <input
                   type="file"
@@ -175,7 +199,9 @@ export default function UploadPage() {
 
             {/* Thumbnail */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Thumbnail Image</label>
+              <label className="text-sm font-medium text-foreground">
+                Thumbnail Image <span className="text-destructive">*</span>
+              </label>
               <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors">
                 <input
                   type="file"

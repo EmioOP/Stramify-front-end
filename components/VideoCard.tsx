@@ -13,8 +13,8 @@ interface VideoCardProps {
   owner: {
     _id: string;
     username: string;
-    avatar: string;
   };
+  avatar?:string;
   duration?: number;
   views: number;
   createdAt: string;

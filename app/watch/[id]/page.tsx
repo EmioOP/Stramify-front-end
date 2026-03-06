@@ -11,6 +11,7 @@ import { ThumbsUp, Share2, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import  { formatInTimeZone } from 'date-fns-tz';
 
 interface Video {
   id: string;
@@ -60,9 +61,11 @@ export default function WatchPage() {
           apiClient.get(`/videos/${videoId}`),
           apiClient.get(`/comments/${videoId}`),
         ]);
-        console.log(videoRes.data.data)
-        console.log(commentsRes.data.data)
-        console.log(videoRes.data.data.isLiked)
+
+        console.log(commentsRes.data.data[0]);
+        const cleanDate = commentsRes.data.data[0].createdAt.replace('Z', '+05:30');
+        console.log(formatInTimeZone(new Date(cleanDate), 'Asia/Kolkata', 'dd MMM yyyy, HH:mm'))
+        
         
         setVideo(videoRes.data.data);
         setComments(commentsRes.data.data || []);
@@ -294,7 +297,7 @@ export default function WatchPage() {
                               {comment.username}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) }
                             </p>
                           </div>
                           <p className="text-foreground mt-1">{comment.content}</p>
