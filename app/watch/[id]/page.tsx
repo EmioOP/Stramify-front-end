@@ -11,7 +11,9 @@ import { ThumbsUp, Share2, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import  { formatInTimeZone } from 'date-fns-tz';
+
+import AddToPlaylistModal from '@/components/AddToPlaylistModal';
+import { ListVideo } from 'lucide-react';
 
 interface Video {
   id: string;
@@ -52,6 +54,7 @@ export default function WatchPage() {
   const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [showPlaylist, setShowPlaylist] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,11 +65,8 @@ export default function WatchPage() {
           apiClient.get(`/comments/${videoId}`),
         ]);
 
-        console.log(commentsRes.data.data[0]);
-        const cleanDate = commentsRes.data.data[0].createdAt.replace('Z', '+05:30');
-        console.log(formatInTimeZone(new Date(cleanDate), 'Asia/Kolkata', 'dd MMM yyyy, HH:mm'))
-        
-        
+
+
         setVideo(videoRes.data.data);
         setComments(commentsRes.data.data || []);
         setIsLiked(videoRes.data.data.isLiked || false);
@@ -214,6 +214,15 @@ export default function WatchPage() {
                     <ThumbsUp className="w-4 h-4 mr-2" />
                     {video.likesCount || 0}
                   </Button>
+
+                  <button onClick={() => setShowPlaylist(true)}>
+                    <ListVideo className="w-5 h-5" /> Save
+                  </button>
+
+                  {showPlaylist && (
+                    <AddToPlaylistModal videoId={video.id} onClose={() => setShowPlaylist(false)} />
+                  )}
+
                   <Button variant="outline" size="sm" className="border-border hover:bg-secondary">
                     <Share2 className="w-4 h-4" />
                   </Button>
@@ -297,7 +306,7 @@ export default function WatchPage() {
                               {comment.username}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) }
+                              {comment.createdAt && !isNaN(new Date(comment.createdAt).getTime()) ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : "Just Now"}
                             </p>
                           </div>
                           <p className="text-foreground mt-1">{comment.content}</p>
