@@ -37,7 +37,7 @@ export default function Header() {
       <div className="px-4 py-3 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="flex-shrink-0">
-          <h1 className="text-2xl font-bold text-primary">StreamHub</h1>
+          <h1 className="text-2xl font-bold text-primary">APERTURE</h1>
         </Link>
 
         {/* Search Bar */}

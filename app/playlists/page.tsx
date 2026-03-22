@@ -33,14 +33,15 @@ export default function PlaylistsPage() {
   }, [isAuthenticated, authLoading]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('my_playlists');
-    if (stored) setPlaylists(JSON.parse(stored));
-  }, []);
+    const fetchPlaylists = async () => {
+      const response = await apiClient.get("/playlists")
+      console.log(response.data.data)
 
-  const save = (updated: Playlist[]) => {
-    setPlaylists(updated);
-    localStorage.setItem('my_playlists', JSON.stringify(updated));
-  };
+      setPlaylists(response?.data?.data);
+    }
+    fetchPlaylists()
+  }, [])
+
 
   const handleCreate = async () => {
     if (!newName.trim()) return;

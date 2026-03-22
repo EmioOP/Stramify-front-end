@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import VideoCard from '@/components/VideoCard';
 import { useAuth } from '@/context/AuthContext';
@@ -9,20 +8,6 @@ import apiClient from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
-
-interface ChannelInfo {
-  _id: string;
-  username: string;
-  email: string;
-  fullName: string;
-  avatar: string;
-  coverImage?: string;
-  description?: string;
-  subscribersCount: number;
-  channelSubscribedToCount: number;
-  isSubscribed: boolean;
-  createdAt: string;
-}
 
 interface Video {
   _id: string;
@@ -42,77 +27,73 @@ interface Video {
 }
 
 export default function ChannelPage() {
-  const params = useParams();
-  const channelId = params.id as string;
   const { user, isAuthenticated } = useAuth();
-  const [channel, setChannel] = useState<ChannelInfo | null>(null);
   const [videos, setVideos] = useState<Video[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const isOwnChannel = isAuthenticated && user?._id === channelId;
 
   useEffect(() => {
-    const fetchChannelData = async () => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const fetchVideos = async () => {
       try {
         setIsLoading(true);
-        const [channelRes, videosRes] = await Promise.all([
-          apiClient.get(`/users/${channelId}`),
-          apiClient.get(`/videos?owner=${channelId}`),
-        ]);
-
-        setChannel(channelRes.data.data);
+        const videosRes = await apiClient.get(`/videos?owner=${user.id}`);
         setVideos(videosRes.data.data || []);
-        setIsSubscribed(channelRes.data.data.isSubscribed || false);
       } catch (error) {
-        console.error('Failed to load channel:', error);
+        console.error('Failed to load videos:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (channelId) {
-      fetchChannelData();
-    }
-  }, [channelId]);
+    fetchVideos();
+  }, [isAuthenticated, user?.id]);
 
-  const handleSubscribe = async () => {
-    if (!isAuthenticated) {
-      alert('Please login to subscribe');
-      return;
-    }
-
-    try {
-      // Toggle subscription endpoint would need to be added to backend
-      setIsSubscribed(!isSubscribed);
-      if (channel) {
-        setChannel({
-          ...channel,
-          subscribersCount: channel.subscribersCount + (isSubscribed ? -1 : 1),
-        });
-      }
-    } catch (error) {
-      console.error('Failed to toggle subscription:', error);
-    }
-  };
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Header />
+        <main className="bg-background min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
+              Please login to view your channel
+            </h2>
+            <Link href="/login">
+              <Button>Login</Button>
+            </Link>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   if (isLoading) {
     return (
       <>
         <Header />
         <main className="bg-background min-h-screen">
+          {/* Cover placeholder shimmer */}
           <div className="w-full h-48 bg-secondary animate-pulse" />
-        </main>
-      </>
-    );
-  }
-
-  if (!channel) {
-    return (
-      <>
-        <Header />
-        <main className="bg-background min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Channel not found</h2>
+          <div className="px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex items-end gap-6">
+                <div className="w-24 h-24 rounded-full bg-secondary animate-pulse -mt-12 border-4 border-background" />
+                <div className="space-y-2 pb-1">
+                  <div className="h-7 w-48 bg-secondary animate-pulse rounded" />
+                  <div className="h-4 w-32 bg-secondary animate-pulse rounded" />
+                </div>
+              </div>
+              {/* Video grid shimmer */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mt-12">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="aspect-video bg-secondary animate-pulse rounded-lg" />
+                    <div className="h-4 w-3/4 bg-secondary animate-pulse rounded" />
+                    <div className="h-3 w-1/2 bg-secondary animate-pulse rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </main>
       </>
@@ -123,78 +104,41 @@ export default function ChannelPage() {
     <>
       <Header />
       <main className="bg-background min-h-screen">
-        {/* Cover Image */}
-        <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-accent/20 overflow-hidden">
-          {channel.coverImage && (
-            <Image
-              src={channel.coverImage}
-              alt="Channel cover"
-              width={1200}
-              height={200}
-              className="w-full h-full object-cover"
-            />
-          )}
-        </div>
+        {/* Cover — gradient only since no coverImage column in DB */}
+        <div className="w-full h-48 bg-gradient-to-r from-primary/20 to-accent/20" />
 
-        {/* Channel Info */}
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-6xl mx-auto">
             {/* Profile Section */}
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
               <div className="flex items-end gap-6">
-                <div className="w-24 h-24 rounded-full bg-primary/20 overflow-hidden -mt-16 border-4 border-background">
+                {/* Avatar — pulled up over the cover */}
+                <div className="w-24 h-24 rounded-full bg-primary/20 overflow-hidden -mt-16 border-4 border-background flex-shrink-0">
                   <Image
-                    src={channel.avatar || '/default-avatar.png'}
-                    alt={channel.username}
+                    src={user?.avatar || '/default-avatar.png'}
+                    alt={user?.username || 'avatar'}
                     width={96}
                     height={96}
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">{channel.fullName}</h1>
-                  <p className="text-muted-foreground">@{channel.username}</p>
-                  <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                    <span>{channel.subscribersCount.toLocaleString()} subscribers</span>
-                    <span>•</span>
-                    <span>{videos.length} videos</span>
-                  </div>
+                  <h1 className="text-3xl font-bold text-foreground">{user?.fullName}</h1>
+                  <p className="text-muted-foreground">@{user?.username}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {videos.length} {videos.length === 1 ? 'video' : 'videos'}
+                  </p>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-2">
-                {isOwnChannel ? (
-                  <Link href="/settings">
-                    <Button className="bg-secondary text-foreground hover:bg-secondary/80">
-                      Edit Channel
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    onClick={handleSubscribe}
-                    className={
-                      isSubscribed
-                        ? 'bg-secondary text-foreground hover:bg-secondary/80'
-                        : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                    }
-                  >
-                    {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                  </Button>
-                )}
-              </div>
+              <Link href="/settings">
+                <Button variant="secondary">Edit Channel</Button>
+              </Link>
             </div>
-
-            {/* Description */}
-            {channel.description && (
-              <div className="mb-12 bg-secondary rounded-lg p-4">
-                <p className="text-foreground whitespace-pre-wrap">{channel.description}</p>
-              </div>
-            )}
 
             {/* Videos Grid */}
             <div>
-              <h2 className="text-2xl font-bold text-foreground mb-6">Videos</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-6">Your Videos</h2>
               {videos.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   {videos.map((video) => (
@@ -211,7 +155,14 @@ export default function ChannelPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-12">No videos uploaded yet</p>
+                <div className="text-center py-16 border border-dashed border-border rounded-xl">
+                  <p className="text-muted-foreground mb-4">
+                    You haven't uploaded any videos yet
+                  </p>
+                  <Link href="/upload">
+                    <Button>Upload your first video</Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>

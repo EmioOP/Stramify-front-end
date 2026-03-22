@@ -1,6 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// const API_BASE_URL =  'http://192.168.1.6:8000/api/v1';
 
 // Create axios instance
 const apiClient: AxiosInstance = axios.create({
