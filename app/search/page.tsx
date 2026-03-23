@@ -7,7 +7,7 @@ import VideoCard from '@/components/VideoCard';
 import apiClient from '@/lib/api';
 
 interface Video {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   videoFile: string;
@@ -35,9 +35,10 @@ export default function SearchPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await apiClient.get('/videos', {
-          params: { search: query },
+        const response = await apiClient.get('/videos/', {
+          params: {  query },
         });
+        console.log(response.data.data)
         setVideos(response.data.data || []);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to load search results');
@@ -94,13 +95,14 @@ export default function SearchPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {videos.map((video) => (
                   <VideoCard
-                    key={video._id}
-                    id={video._id}
+                    key={video.id}
+                    id={video.id}
                     title={video.title}
                     thumbnail={video.thumbnail}
                     owner={video.owner}
                     duration={video.duration}
                     views={video.views}
+                    avatar={video.avatar}
                     createdAt={video.createdAt}
                   />
                 ))}
