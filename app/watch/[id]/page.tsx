@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { ThumbsUp, Share2, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, set } from 'date-fns';
 
 import AddToPlaylistModal from '@/components/AddToPlaylistModal';
 import { ListVideo } from 'lucide-react';
@@ -60,14 +60,17 @@ export default function WatchPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [videoRes, commentsRes] = await Promise.all([
+        const [videoRes, commentsRes, likeRes] = await Promise.all([
           apiClient.get(`/videos/${videoId}`),
           apiClient.get(`/comments/${videoId}`),
+          apiClient.get(`/likes/${videoId}`)
         ]);
 
 
-
-        setVideo(videoRes.data.data);
+        setVideo({
+          ...videoRes.data.data,
+          likesCount: likeRes.data.data.like_count,
+        });
         setComments(commentsRes.data.data || []);
         setIsLiked(videoRes.data.data.isLiked || false);
 
@@ -85,25 +88,29 @@ export default function WatchPage() {
     }
   }, [videoId]);
 
-  const handleLike = async () => {
-    if (!isAuthenticated) {
-      alert('Please login to like videos');
-      return;
-    }
+const handleLike = async () => {
+  if (!isAuthenticated) {
+    alert('Please login to like videos');
+    return;
+  }
 
-    try {
-      await apiClient.post(`/likes/like/${videoId}`);
-      setIsLiked(!isLiked);
-      if (video) {
-        setVideo({
-          ...video,
-          likesCount: (video.likesCount || 0) + (isLiked ? -1 : 1),
-        });
-      }
-    } catch (error) {
-      console.error('Failed to toggle like:', error);
-    }
-  };
+  try {
+    await apiClient.post(`/likes/like/${videoId}`);
+
+    setIsLiked((prev) => !prev);
+
+    setVideo((prev) =>
+      prev
+        ? {
+            ...prev,
+            likesCount: (prev.likesCount || 0) + (isLiked ? -1 : 1),
+          }
+        : prev
+    );
+  } catch (error) {
+    console.error('Failed to toggle like:', error);
+  }
+};
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

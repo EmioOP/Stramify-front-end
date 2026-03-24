@@ -194,7 +194,7 @@ const handleDelete = async () => {
                   </span>
 
                   {/* Thumbnail */}
-                  <Link href={`/video/${video.id}`} className="shrink-0">
+                  <Link href={`/watch/${video.id}`} className="shrink-0">
                     <div className="relative w-40 aspect-video rounded-lg overflow-hidden bg-secondary">
                       <Image
                         src={video.thumbnail}
@@ -210,7 +210,7 @@ const handleDelete = async () => {
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
-                    <Link href={`/video/${video.id}`}>
+                    <Link href={`/watch/${video.id}`}>
                       <h3 className="font-medium text-foreground line-clamp-2 hover:text-primary transition-colors">
                         {video.title}
                       </h3>
