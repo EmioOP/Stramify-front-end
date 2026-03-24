@@ -45,13 +45,15 @@ export default function PlaylistPage() {
   const [error, setError] = useState('');
   const [removingId, setRemovingId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [playlistName, setPlaylistName] = useState<string | null>(null);
 
-  // Get playlist name from localStorage
-  const playlists: { id: number; name: string }[] =
-    typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('my_playlists') || '[]')
-      : [];
-  const playlist = playlists.find((p) => String(p.id) === String(id));
+  useEffect(() => {
+    const playlists: { id: number; name: string }[] = JSON.parse(
+      localStorage.getItem('my_playlists') || '[]'
+    );
+    const found = playlists.find((p) => String(p.id) === String(id));
+    setPlaylistName(found?.name ?? null);
+  }, [id]);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -81,19 +83,22 @@ export default function PlaylistPage() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Delete this playlist?')) return;
-    setIsDeleting(true);
-    try {
-      await apiClient.delete(`/playlists/${id}`);
-      const updated = playlists.filter((p) => String(p.id) !== String(id));
-      localStorage.setItem('my_playlists', JSON.stringify(updated));
-      router.push('/playlists');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete playlist');
-      setIsDeleting(false);
-    }
-  };
+const handleDelete = async () => {
+  if (!confirm('Delete this playlist?')) return;
+  setIsDeleting(true);
+  try {
+    await apiClient.delete(`/playlists/${id}`);
+    const playlists: { id: number; name: string }[] = JSON.parse(
+      localStorage.getItem('my_playlists') || '[]'
+    );
+    const updated = playlists.filter((p) => String(p.id) !== String(id));
+    localStorage.setItem('my_playlists', JSON.stringify(updated));
+    router.push('/playlists');
+  } catch (err: any) {
+    setError(err.response?.data?.message || 'Failed to delete playlist');
+    setIsDeleting(false);
+  }
+};
 
   const totalDuration = videos.reduce((acc, v) => acc + v.duration, 0);
   const totalViews = videos.reduce((acc, v) => acc + v.views, 0);
@@ -112,7 +117,7 @@ export default function PlaylistPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  {playlist?.name || `Playlist #${id}`}
+                  {playlistName ?? `Playlist #${id}`}
                 </h1>
                 <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">

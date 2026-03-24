@@ -14,11 +14,7 @@ interface Video {
   duration: number;
   views: number;
   isPublished: boolean;
-  owner: {
-    _id: string;
-    username: string;
-    avatar: string;
-  };
+  owner: string;
   createdAt: string;
   updatedAt: string;
 }
