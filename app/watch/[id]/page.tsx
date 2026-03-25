@@ -34,10 +34,10 @@ interface Video {
 }
 
 interface Comment {
-  _id: string;
+  id: string;
   content: string;
   owner: {
-    _id: string;
+    id: string;
     username: string;
     avatar: string;
   };
@@ -60,10 +60,11 @@ export default function WatchPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [videoRes, commentsRes, likeRes] = await Promise.all([
+        const [videoRes, commentsRes, likeRes,liked] = await Promise.all([
           apiClient.get(`/videos/${videoId}`),
           apiClient.get(`/comments/${videoId}`),
-          apiClient.get(`/likes/${videoId}`)
+          apiClient.get(`/likes/${videoId}`),
+          apiClient.get(`/likes/isLiked/${videoId}`),
         ]);
 
 
@@ -72,7 +73,7 @@ export default function WatchPage() {
           likesCount: likeRes.data.data.like_count,
         });
         setComments(commentsRes.data.data || []);
-        setIsLiked(videoRes.data.data.isLiked || false);
+        setIsLiked(liked.data.data.isLiked);
 
         // Increment view count
         await apiClient.post(`/videos/${videoId}/view`);
