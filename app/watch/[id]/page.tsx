@@ -23,10 +23,11 @@ interface Video {
   thumbnail: string;
   duration: number;
   views: number;
+  avatar: string;
+  username: string;
+  fullName: string;
   owner: {
     id: string;
-    username: string;
-    avatar: string;
   };
   createdAt: string;
   isLiked?: boolean;
@@ -36,10 +37,10 @@ interface Video {
 interface Comment {
   id: string;
   content: string;
+  username: string;
+  avatar: string;
   owner: {
     id: string;
-    username: string;
-    avatar: string;
   };
   createdAt: string;
 }
@@ -60,7 +61,7 @@ export default function WatchPage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [videoRes, commentsRes, likeRes,liked] = await Promise.all([
+        const [videoRes, commentsRes, likeRes, liked] = await Promise.all([
           apiClient.get(`/videos/${videoId}`),
           apiClient.get(`/comments/${videoId}`),
           apiClient.get(`/likes/${videoId}`),
@@ -89,29 +90,29 @@ export default function WatchPage() {
     }
   }, [videoId]);
 
-const handleLike = async () => {
-  if (!isAuthenticated) {
-    alert('Please login to like videos');
-    return;
-  }
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      alert('Please login to like videos');
+      return;
+    }
 
-  try {
-    await apiClient.post(`/likes/like/${videoId}`);
+    try {
+      await apiClient.post(`/likes/like/${videoId}`);
 
-    setIsLiked((prev) => !prev);
+      setIsLiked((prev) => !prev);
 
-    setVideo((prev) =>
-      prev
-        ? {
+      setVideo((prev) =>
+        prev
+          ? {
             ...prev,
             likesCount: (prev.likesCount || 0) + (isLiked ? -1 : 1),
           }
-        : prev
-    );
-  } catch (error) {
-    console.error('Failed to toggle like:', error);
-  }
-};
+          : prev
+      );
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
+    }
+  };
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
